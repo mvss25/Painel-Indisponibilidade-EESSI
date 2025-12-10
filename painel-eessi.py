@@ -36,7 +36,7 @@ with st.sidebar:
 
 # Carregar Excel
 try:
-    df = pd.read_excel("indisponibilidades-2.xlsx", dtype=str)
+    df = pd.read_excel("indisponibilidades.xlsx", dtype=str)
     if df.empty:
         st.info("Nenhuma indisponibilidade registrada no arquivo Excel.")
         st.stop()
@@ -105,4 +105,5 @@ historico = total - ativas
 st.sidebar.metric("Total registrado", total)
 st.sidebar.metric("Ativas (futuras ou em andamento)", ativas)
 st.sidebar.metric("Em andamento", em_andamento_count)
+
 st.sidebar.metric("Histórico (concluídas)", historico)
