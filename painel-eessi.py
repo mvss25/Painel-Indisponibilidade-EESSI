@@ -36,7 +36,7 @@ with st.sidebar:
 
 # Carregar Excel
 try:
-    df = pd.read_excel("indisponibilidades.xlsx", dtype=str)
+    df = pd.read_excel("indisponibilidades-2.xlsx", dtype=str)
     if df.empty:
         st.info("Nenhuma indisponibilidade registrada no arquivo Excel.")
         st.stop()
@@ -78,8 +78,8 @@ st.subheader(titulo_tabela)
 if df_exibicao.empty:
     st.info("Nenhuma indisponibilidade para exibir com os filtros atuais.")
 else:
-    tabela = df_exibicao[['Ambiente', 'Inicio_fmt', 'Fim_fmt', 'Motivo', 'Status', 'Status Atual']]
-    tabela.columns = ['Ambiente', 'Início', 'Fim', 'Motivo', 'Status', 'Status Atual']
+    tabela = df_exibicao[['País','AP','Ambiente', 'Data Início', 'Hora Início', 'Data Fim', 'Hora Fim', 'Motivo', 'Impacto', 'Status Atual']]
+    tabela.columns = ['País','AP','Ambiente', 'Data Início', 'Hora Início', 'Data Fim', 'Hora Fim', 'Motivo', 'Impacto', 'Status Atual']
     st.dataframe(tabela, use_container_width=True, hide_index=True)
 
 # Indisponibilidades em andamento
@@ -90,11 +90,8 @@ if not em_andamento.empty:
     em_andamento['Inicio_fmt'] = em_andamento['Inicio'].dt.strftime('%d/%m/%Y %H:%M')
     em_andamento['Fim_fmt'] = em_andamento['Fim'].dt.strftime('%d/%m/%Y %H:%M')
     st.warning("⚠️ Há ambientes indisponíveis no momento!")
-    st.dataframe(
-        em_andamento[['Ambiente', 'Inicio_fmt', 'Fim_fmt', 'Motivo', 'Status']],
-        use_container_width=True,
-        hide_index=True
-    )
+    tabela_em_andamento = em_andamento[['País','AP','Ambiente','Data Início','Hora Início','Data Fim', 'Hora Fim','Motivo', 'Impacto']]
+    st.dataframe(tabela_em_andamento, use_container_width=True, hide_index=True)
 else:
     st.success("✅ Todos os ambientes estão disponíveis no momento.")
 
