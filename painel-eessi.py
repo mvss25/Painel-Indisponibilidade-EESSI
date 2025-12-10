@@ -2,18 +2,45 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime
 
-st.set_page_config(layout="wide")  # 👈 Importante: usa toda a largura da tela
+# ---------- CONFIGURAÇÃO DE AUTENTICAÇÃO ----------
+SENHA_CORRETA = "Segurançasocial"  # 🔑 ALTERE PARA SUA SENHA!
 
+def verificar_login():
+    # Inicializa o estado de login se não existir
+    if "logado" not in st.session_state:
+        st.session_state.logado = False
+
+    # Se não estiver logado, mostra o formulário de login
+    if not st.session_state.logado:
+        st.title("🔒 Acesso Restrito")
+        senha = st.text_input("Digite a senha para acessar o painel:", type="password")
+        if st.button("Entrar"):
+            if senha == SENHA_CORRETA:
+                st.session_state.logado = True  # ✅ Corrigido aqui!
+                st.rerun()  # Recarrega a página para mostrar o painel
+            else:
+                st.error("Senha incorreta. Tente novamente.")
+        st.stop()  # Impede o resto do código de rodar
+
+# Verifica login antes de carregar o painel
+verificar_login()
+# ---------- A PARTIR DAQUI, O USUÁRIO ESTÁ AUTENTICADO ----------
+st.set_page_config(layout="wide")
 st.title("📊 Painel de Indisponibilidade de Ambientes")
+
+# Opção de logout (opcional, na barra lateral)
+with st.sidebar:
+    if st.button("🚪 Sair"):
+        st.session_state.logado = False
+        st.rerun()
 
 # Carregar Excel
 try:
-    df = pd.read_df = pd.read_excel("indisponibilidades.xlsx", dtype=str)
+    df = pd.read_excel("indisponibilidades.xlsx", dtype=str)
     if df.empty:
         st.info("Nenhuma indisponibilidade registrada no arquivo Excel.")
         st.stop()
     
-    # Converter para datetime
     df['Inicio'] = pd.to_datetime(df['Data Início'] + ' ' + df['Hora Início'])
     df['Fim'] = pd.to_datetime(df['Data Fim'] + ' ' + df['Hora Fim'])
     
@@ -35,29 +62,27 @@ else:
     df_exibicao = df_exibicao.sort_values('Inicio')
     titulo_tabela = "Próximas indisponibilidades"
 
-# --- Formatar datas para serem mais compactas ---
+# Formatar datas
 df_exibicao['Inicio_fmt'] = df_exibicao['Inicio'].dt.strftime('%d/%m/%Y %H:%M')
 df_exibicao['Fim_fmt'] = df_exibicao['Fim'].dt.strftime('%d/%m/%Y %H:%M')
 
-# Adicionar status visual
+# Status atual
 df_exibicao['Status Atual'] = df_exibicao.apply(
     lambda row: "🔴 Em andamento" if row['Inicio'] <= agora <= row['Fim'] 
                 else ("🟢 Futura" if row['Inicio'] > agora else "⚪ Concluída"),
     axis=1
 )
 
-# === Tabela principal ===
+# Tabela principal
 st.subheader(titulo_tabela)
 if df_exibicao.empty:
     st.info("Nenhuma indisponibilidade para exibir com os filtros atuais.")
 else:
-    # Exibir colunas formatadas (sem as colunas originais de datetime)
     tabela = df_exibicao[['Ambiente', 'Inicio_fmt', 'Fim_fmt', 'Motivo', 'Status', 'Status Atual']]
-    tabela.columns = ['Ambiente', 'Início', 'Fim', 'Motivo', 'Status', 'Status Atual']  # nomes legíveis
-    
+    tabela.columns = ['Ambiente', 'Início', 'Fim', 'Motivo', 'Status', 'Status Atual']
     st.dataframe(tabela, use_container_width=True, hide_index=True)
 
-# === Indisponibilidades em andamento ===
+# Indisponibilidades em andamento
 st.markdown("---")
 st.subheader("🚨 Indisponibilidades em andamento")
 em_andamento = df[(df['Inicio'] <= agora) & (df['Fim'] >= agora)].copy()
@@ -73,7 +98,7 @@ if not em_andamento.empty:
 else:
     st.success("✅ Todos os ambientes estão disponíveis no momento.")
 
-# === Resumo na barra lateral ===
+# Resumo na barra lateral
 st.sidebar.markdown("### 📈 Resumo")
 total = len(df)
 ativas = len(df[df['Fim'] >= agora])
